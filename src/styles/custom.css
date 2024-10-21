@@ -1,0 +1,44 @@
+.custom-button {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #330002!important;
+    border: 1px solid #330002;
+  }
+  
+  .custom-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    background-color: #4a0003; /* Slightly lighter for hover effect */
+  }
+  
+  .custom-button__icon {
+    color: #ffffff;
+    margin-right: 8px;
+  }
+  
+  .custom-button__label {
+    color: #ffffff;
+    font-weight: 500;
+  }
+  
+  .custom-button--primary {
+    background-color: #007AFF;
+    border-color: #007AFF;
+  }
+  
+  .custom-button--primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .custom-page {
+    background-color: #C39143!important;
+  }
+
+  .page__content {
+    background-color: #C39143!important;
+  }
+
+.button--custom-button {
+    background-color: #330002!important;
+}
