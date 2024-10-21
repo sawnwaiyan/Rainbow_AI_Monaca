@@ -3,6 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
+import { fetchTherapists, fetchServices } from '../services/api';
 import '../styles/custom.css';
 
 const defaultPrompts = [
@@ -12,27 +13,15 @@ const defaultPrompts = [
 	{ key: 'profile', label: 'プロフィール', icon: 'fa-user' },
 ];
 
-const fetchTherapists = async () => {
-	try {
-		const response = await fetch('http://127.0.0.1:8000/chat/get_therapist_prompts/');
-		if (!response.ok) {
-			throw new Error('Failed to fetch therapists');
-		}
-		const data = await response.json();
-		return data.therapist_prompts;
-	} catch (error) {
-		console.error('Error fetching therapists:', error);
-		return [];
-	}
-};
-
 export default function ChatPage() {
 	const [inputText, setInputText] = useState('');
 	const [currentPrompts, setCurrentPrompts] = useState(defaultPrompts);
 	const [childPrompts, setChildPrompts] = useState([]);
 	const [messages, setMessages] = useState([]);
 	const [therapists, setTherapists] = useState([]);
+	const [services, setServices] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
 	const chatRef = useRef(null);
 
@@ -65,6 +54,7 @@ export default function ChatPage() {
 
 	const handlePromptClick = async (key) => {
 		if (key === 'reservation') {
+			setBookingStep('therapistSelection');
 			setCurrentPrompts([{ key: 'therapistSelection', label: 'セラピスト選択', icon: 'fa-user-md' }]);
 			addMessage({ type: 'user', text: '予約' });
 			addMessage({ type: 'ai', text: 'セラピストを選択してください。' });
@@ -86,12 +76,39 @@ export default function ChatPage() {
 		}
 	};
 
-	const handleTherapistSelection = (therapist) => {
+	const handleTherapistSelection = async (therapist) => {
 		localStorage.setItem('selectedTherapist', JSON.stringify(therapist));
 		setChildPrompts([]);
 		addMessage({ type: 'user', text: `${therapist.name}を選択` });
-		addMessage({ type: 'ai', text: `${therapist.name}が選択されました。次の手順に進んでください。` });
+		addMessage({ type: 'ai', text: `${therapist.name}が選択されました。サービスメニューを選択してください。` });
+		
+		setBookingStep('serviceSelection');
+		setCurrentPrompts([{ key: 'serviceSelection', label: 'サービスメニュー選択', icon: 'fa-list-alt' }]);
+		
+		setIsLoading(true);
+		const fetchedServices = await fetchServices();
+		setIsLoading(false);
+
+		if (fetchedServices.length > 0) {
+			setServices(fetchedServices);
+			setChildPrompts(fetchedServices.map(service => ({
+				key: `service-${service.id}`,
+				label: service.name,
+				onClick: () => handleServiceSelection(service)
+			})));
+		} else {
+			addMessage({ type: 'ai', text: 'サービスメニューの情報を取得できませんでした。もう一度お試しください。' });
+		}
+	};
+
+	const handleServiceSelection = (service) => {
+		localStorage.setItem('selectedService', JSON.stringify(service));
+		setChildPrompts([]);
+		addMessage({ type: 'user', text: `${service.name}を選択` });
+		addMessage({ type: 'ai', text: `${service.name}が選択されました。次の手順に進んでください。` });
 		// Here you can add logic to move to the next step in the booking process
+		setBookingStep('');
+		setCurrentPrompts(defaultPrompts);
 	};
 
 	const renderBottomToolbar = () => (
@@ -139,7 +156,7 @@ export default function ChatPage() {
 				{childPrompts.length > 0 && (
 					<div style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>
 						{isLoading ? (
-							<p>Loading therapists...</p>
+							<p>Loading...</p>
 						) : (
 							childPrompts.map((prompt) => (
 								<Button
