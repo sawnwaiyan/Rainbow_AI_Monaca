@@ -12,17 +12,27 @@ const defaultPrompts = [
 	{ key: 'profile', label: 'プロフィール', icon: 'fa-user' },
 ];
 
-const therapistList = [
-	{ id: 1, name: 'セラピスト1' },
-	{ id: 2, name: 'セラピスト2' },
-	{ id: 3, name: 'セラピスト3' },
-];
+const fetchTherapists = async () => {
+	try {
+		const response = await fetch('http://127.0.0.1:8000/chat/get_therapist_prompts/');
+		if (!response.ok) {
+			throw new Error('Failed to fetch therapists');
+		}
+		const data = await response.json();
+		return data.therapist_prompts;
+	} catch (error) {
+		console.error('Error fetching therapists:', error);
+		return [];
+	}
+};
 
 export default function ChatPage() {
 	const [inputText, setInputText] = useState('');
 	const [currentPrompts, setCurrentPrompts] = useState(defaultPrompts);
 	const [childPrompts, setChildPrompts] = useState([]);
 	const [messages, setMessages] = useState([]);
+	const [therapists, setTherapists] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 	const inputRef = useRef(null);
 	const chatRef = useRef(null);
 
@@ -53,16 +63,26 @@ export default function ChatPage() {
 		setMessages(prevMessages => [...prevMessages, message]);
 	};
 
-	const handlePromptClick = (key) => {
+	const handlePromptClick = async (key) => {
 		if (key === 'reservation') {
 			setCurrentPrompts([{ key: 'therapistSelection', label: 'セラピスト選択', icon: 'fa-user-md' }]);
-			setChildPrompts(therapistList.map(therapist => ({
-				key: `therapist-${therapist.id}`,
-				label: therapist.name,
-				onClick: () => handleTherapistSelection(therapist)
-			})));
 			addMessage({ type: 'user', text: '予約' });
 			addMessage({ type: 'ai', text: 'セラピストを選択してください。' });
+			
+			setIsLoading(true);
+			const fetchedTherapists = await fetchTherapists();
+			setIsLoading(false);
+
+			if (fetchedTherapists.length > 0) {
+				setTherapists(fetchedTherapists);
+				setChildPrompts(fetchedTherapists.map(therapist => ({
+					key: `therapist-${therapist.id}`,
+					label: therapist.name,
+					onClick: () => handleTherapistSelection(therapist)
+				})));
+			} else {
+				addMessage({ type: 'ai', text: 'セラピストの情報を取得できませんでした。もう一度お試しください。' });
+			}
 		}
 	};
 
@@ -118,14 +138,18 @@ export default function ChatPage() {
 				{/* Child Prompts */}
 				{childPrompts.length > 0 && (
 					<div style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>
-						{childPrompts.map((prompt) => (
-							<Button
-								key={prompt.key}
-								label={prompt.label}
-								onClick={prompt.onClick}
-								style={{ marginRight: '8px', marginBottom: '8px' }}
-							/>
-						))}
+						{isLoading ? (
+							<p>Loading therapists...</p>
+						) : (
+							childPrompts.map((prompt) => (
+								<Button
+									key={prompt.key}
+									label={prompt.label}
+									onClick={prompt.onClick}
+									style={{ marginRight: '8px', marginBottom: '8px' }}
+								/>
+							))
+						)}
 					</div>
 				)}
 
