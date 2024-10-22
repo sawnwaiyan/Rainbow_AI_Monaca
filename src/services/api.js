@@ -44,26 +44,22 @@ export const fetchDates = async () => {
 	}
 };
 
-// export const fetchTimeSlots = async (therapistId, date, serviceTime) => {
-// 	try {
-// 		const response = await fetch(`${API_BASE_URL}/get_time_prompts/`, {
-// 			method: 'POST',
-// 			headers: {
-// 				'Content-Type': 'application/json',
-// 			},
-// 			body: JSON.stringify({
-// 				therapist_id: therapistId,
-// 				date: date,
-// 				service_time: serviceTime,
-// 			}),
-// 		});
-// 		if (!response.ok) {
-// 			throw new Error('Failed to fetch time slots');
-// 		}
-// 		const data = await response.json();
-// 		return data.time_prompts;
-// 	} catch (error) {
-// 		console.error('Error fetching time slots:', error);
-// 		return [];
-// 	}
-// };
+export const fetchTimeSlots = async (therapistId, date, serviceTime = 30) => {
+	try {
+		const queryParams = new URLSearchParams({
+			therapist_id: therapistId,
+			date: date,
+			service_time: serviceTime
+		});
+
+		const response = await fetch(`${API_BASE_URL}/get_time_prompts/?${queryParams}`);
+		if (!response.ok) {
+			throw new Error('Failed to fetch time slots');
+		}
+		const data = await response.json();
+		return data.time_prompts;
+	} catch (error) {
+		console.error('Error fetching time slots:', error);
+		return [];
+	}
+};

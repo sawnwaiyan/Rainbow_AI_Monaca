@@ -3,7 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
-import { fetchTherapists, fetchServices, fetchDates } from '../services/api';
+import { fetchTherapists, fetchServices, fetchDates, fetchTimeSlots } from '../services/api';
 import '../styles/custom.css';
 
 const defaultPrompts = [
@@ -21,6 +21,7 @@ export default function ChatPage() {
 	const [therapists, setTherapists] = useState([]);
 	const [services, setServices] = useState([]);
 	const [dates, setDates] = useState([]);
+	const [timeSlots, setTimeSlots] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
@@ -127,14 +128,60 @@ export default function ChatPage() {
 		}
 	};
 
-	const handleDateSelection = (date) => {
+	const handleDateSelection = async (date) => {
 		localStorage.setItem('selectedDate', JSON.stringify(date));
 		setChildPrompts([]);
 		addMessage({ type: 'user', text: `${date.date}を選択` });
-		addMessage({ type: 'ai', text: `${date.date}が選択されました。次の手順に進んでください。` });
-		// Here you can add logic to move to the next step in the booking process
-		setBookingStep('');
-		setCurrentPrompts(defaultPrompts);
+		addMessage({ type: 'ai', text: `${date.date}が選択されました。時間を選択してください。` });
+		
+		setBookingStep('timeSelection');
+		setCurrentPrompts([{ key: 'timeSelection', label: '時間選択', icon: 'fa-clock' }]);
+		
+		// Get stored data
+		const selectedTherapist = JSON.parse(localStorage.getItem('selectedTherapist'));
+		const selectedService = JSON.parse(localStorage.getItem('selectedService'));
+		
+		if (!selectedTherapist || !selectedService) {
+			addMessage({ type: 'ai', text: 'セラピストとサービスを先に選択してください。' });
+			return;
+		}
+		
+		setIsLoading(true);
+		try {
+			const fetchedTimeSlots = await fetchTimeSlots(
+				selectedTherapist.id,
+				date.date,
+				selectedService.duration || 30
+			);
+
+			if (fetchedTimeSlots.length > 0) {
+				setChildPrompts(fetchedTimeSlots.map(slot => ({
+					key: `time-${slot.id}`,
+					label: slot.time,
+					onClick: () => handleTimeSelection(slot)
+				})));
+			} else {
+				addMessage({ type: 'ai', text: '指定の日付の予約可能な時間がありません。別の日付を選択してください。' });
+				// Reset to date selection if no time slots available
+				setCurrentPrompts([{ key: 'dateSelection', label: '日付選択', icon: 'fa-calendar' }]);
+			}
+		} catch (error) {
+			console.error('Error fetching time slots:', error);
+			addMessage({ type: 'ai', text: '時間枠の取得中にエラーが発生しました。もう一度お試しください。' });
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleTimeSelection = (timeSlot) => {
+		localStorage.setItem('selectedTime', JSON.stringify(timeSlot));
+		setChildPrompts([]);
+		addMessage({ type: 'user', text: `${timeSlot.time}を選択` });
+		addMessage({ type: 'ai', text: `${timeSlot.time}が選択されました。次の手順に進んでください。` });
+		
+		// Move to next step (address selection)
+		setBookingStep('addressSelection');
+		setCurrentPrompts([{ key: 'addressSelection', label: '住所選択', icon: 'fa-map-marker-alt' }]);
 	};
 
 	const renderBottomToolbar = () => (
