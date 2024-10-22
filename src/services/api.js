@@ -29,3 +29,41 @@ export const fetchServices = async () => {
 		return [];
 	}
 };
+
+export const fetchDates = async () => {
+	try {
+		const response = await fetch(`${API_BASE_URL}/get_date_prompts/`);
+		if (!response.ok) {
+			throw new Error('Failed to fetch dates');
+		}
+		const data = await response.json();
+		return data.date_prompts;
+	} catch (error) {
+		console.error('Error fetching dates:', error);
+		return [];
+	}
+};
+
+// export const fetchTimeSlots = async (therapistId, date, serviceTime) => {
+// 	try {
+// 		const response = await fetch(`${API_BASE_URL}/get_time_prompts/`, {
+// 			method: 'POST',
+// 			headers: {
+// 				'Content-Type': 'application/json',
+// 			},
+// 			body: JSON.stringify({
+// 				therapist_id: therapistId,
+// 				date: date,
+// 				service_time: serviceTime,
+// 			}),
+// 		});
+// 		if (!response.ok) {
+// 			throw new Error('Failed to fetch time slots');
+// 		}
+// 		const data = await response.json();
+// 		return data.time_prompts;
+// 	} catch (error) {
+// 		console.error('Error fetching time slots:', error);
+// 		return [];
+// 	}
+// };

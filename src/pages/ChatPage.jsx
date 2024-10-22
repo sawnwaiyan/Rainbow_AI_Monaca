@@ -3,7 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
-import { fetchTherapists, fetchServices } from '../services/api';
+import { fetchTherapists, fetchServices, fetchDates } from '../services/api';
 import '../styles/custom.css';
 
 const defaultPrompts = [
@@ -20,6 +20,7 @@ export default function ChatPage() {
 	const [messages, setMessages] = useState([]);
 	const [therapists, setTherapists] = useState([]);
 	const [services, setServices] = useState([]);
+	const [dates, setDates] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
@@ -101,11 +102,36 @@ export default function ChatPage() {
 		}
 	};
 
-	const handleServiceSelection = (service) => {
+	const handleServiceSelection = async (service) => {
 		localStorage.setItem('selectedService', JSON.stringify(service));
 		setChildPrompts([]);
 		addMessage({ type: 'user', text: `${service.name}を選択` });
-		addMessage({ type: 'ai', text: `${service.name}が選択されました。次の手順に進んでください。` });
+		addMessage({ type: 'ai', text: `${service.name}が選択されました。日付を選択してください。` });
+		
+		setBookingStep('dateSelection');
+		setCurrentPrompts([{ key: 'dateSelection', label: '日付選択', icon: 'fa-calendar' }]);
+		
+		setIsLoading(true);
+		const fetchedDates = await fetchDates();
+		setIsLoading(false);
+
+		if (fetchedDates.length > 0) {
+			setDates(fetchedDates);
+			setChildPrompts(fetchedDates.map(date => ({
+				key: `date-${date.id}`,
+				label: date.date,
+				onClick: () => handleDateSelection(date)
+			})));
+		} else {
+			addMessage({ type: 'ai', text: '日付の情報を取得できませんでした。もう一度お試しください。' });
+		}
+	};
+
+	const handleDateSelection = (date) => {
+		localStorage.setItem('selectedDate', JSON.stringify(date));
+		setChildPrompts([]);
+		addMessage({ type: 'user', text: `${date.date}を選択` });
+		addMessage({ type: 'ai', text: `${date.date}が選択されました。次の手順に進んでください。` });
 		// Here you can add logic to move to the next step in the booking process
 		setBookingStep('');
 		setCurrentPrompts(defaultPrompts);
