@@ -63,3 +63,39 @@ export const fetchTimeSlots = async (therapistId, date, serviceTime = 30) => {
 		return [];
 	}
 };
+
+export const fetchAddresses = async (customerId = '1') => {
+	try {
+		const queryParams = new URLSearchParams({
+			customer_id: customerId
+		});
+
+		const response = await fetch(`${API_BASE_URL}/get_address_prompts/?${queryParams}`);
+		if (!response.ok) {
+			throw new Error('Failed to fetch addresses');
+		}
+		const data = await response.json();
+		return data.address_prompts;
+	} catch (error) {
+		console.error('Error fetching addresses:', error);
+		return [];
+	}
+};
+
+export const fetchCreditCards = async (customerId = '1') => {
+	try {
+		const queryParams = new URLSearchParams({
+			customer_id: customerId
+		});
+
+		const response = await fetch(`${API_BASE_URL}/get_credit_card_prompts/?${queryParams}`);
+		if (!response.ok) {
+			throw new Error('Failed to fetch credit cards');
+		}
+		const data = await response.json();
+		return data.credit_card_prompts;
+	} catch (error) {
+		console.error('Error fetching credit cards:', error);
+		return [];
+	}
+};

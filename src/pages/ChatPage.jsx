@@ -3,7 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
-import { fetchTherapists, fetchServices, fetchDates, fetchTimeSlots } from '../services/api';
+import { fetchTherapists, fetchServices, fetchDates, fetchTimeSlots, fetchAddresses, fetchCreditCards   } from '../services/api';
 import '../styles/custom.css';
 
 const defaultPrompts = [
@@ -22,6 +22,8 @@ export default function ChatPage() {
 	const [services, setServices] = useState([]);
 	const [dates, setDates] = useState([]);
 	const [timeSlots, setTimeSlots] = useState([]);
+	const [addresses, setAddresses] = useState([]);
+	const [creditCards, setCreditCards] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
@@ -173,15 +175,77 @@ export default function ChatPage() {
 		}
 	};
 
-	const handleTimeSelection = (timeSlot) => {
+	const handleTimeSelection = async (timeSlot) => {
 		localStorage.setItem('selectedTime', JSON.stringify(timeSlot));
 		setChildPrompts([]);
 		addMessage({ type: 'user', text: `${timeSlot.time}を選択` });
-		addMessage({ type: 'ai', text: `${timeSlot.time}が選択されました。次の手順に進んでください。` });
+		addMessage({ type: 'ai', text: `${timeSlot.time}が選択されました。住所を選択してください。` });
 		
-		// Move to next step (address selection)
 		setBookingStep('addressSelection');
 		setCurrentPrompts([{ key: 'addressSelection', label: '住所選択', icon: 'fa-map-marker-alt' }]);
+
+		setIsLoading(true);
+		try {
+			const fetchedAddresses = await fetchAddresses();
+
+			if (fetchedAddresses.length > 0) {
+				setAddresses(fetchedAddresses);
+				setChildPrompts(fetchedAddresses.map(addr => ({
+					key: `address-${addr.id}`,
+					label: addr.address,
+					onClick: () => handleAddressSelection(addr)
+				})));
+			} else {
+				addMessage({ type: 'ai', text: '住所情報が見つかりません。' });
+			}
+		} catch (error) {
+			console.error('Error fetching addresses:', error);
+			addMessage({ type: 'ai', text: '住所情報の取得中にエラーが発生しました。' });
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleAddressSelection = async (address) => {
+		localStorage.setItem('selectedAddress', JSON.stringify(address));
+		setChildPrompts([]);
+		addMessage({ type: 'user', text: `${address.address}を選択` });
+		addMessage({ type: 'ai', text: `${address.address}が選択されました。クレジットカードを選択してください。` });
+		
+		setBookingStep('creditCardSelection');
+		setCurrentPrompts([{ key: 'creditCardSelection', label: 'クレジットカード選択', icon: 'fa-credit-card' }]);
+
+		setIsLoading(true);
+		try {
+			const fetchedCards = await fetchCreditCards();
+
+			if (fetchedCards.length > 0) {
+				setCreditCards(fetchedCards);
+				setChildPrompts(fetchedCards.map(card => ({
+					key: `card-${card.id}`,
+					label: card.display,
+					onClick: () => handleCreditCardSelection(card)
+				})));
+			} else {
+				addMessage({ type: 'ai', text: 'クレジットカード情報が見つかりません。' });
+			}
+		} catch (error) {
+			console.error('Error fetching credit cards:', error);
+			addMessage({ type: 'ai', text: 'クレジットカード情報の取得中にエラーが発生しました。' });
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleCreditCardSelection = (card) => {
+		localStorage.setItem('selectedCard', JSON.stringify(card));
+		setChildPrompts([]);
+		addMessage({ type: 'user', text: `${card.display}を選択` });
+		addMessage({ type: 'ai', text: `${card.display}が選択されました。予約内容を確認します。` });
+		
+		// Move to final confirmation step
+		setBookingStep('confirmation');
+		setCurrentPrompts([{ key: 'confirmation', label: '予約確認', icon: 'fa-check-circle' }]);
 	};
 
 	const renderBottomToolbar = () => (
