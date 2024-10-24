@@ -3,7 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
-import { fetchTherapists, fetchServices, fetchDates, fetchTimeSlots } from '../services/api';
+import { sendMessage } from '../services/api';
 import '../styles/custom.css';
 
 const defaultPrompts = [
@@ -13,15 +13,21 @@ const defaultPrompts = [
 	{ key: 'profile', label: 'プロフィール', icon: 'fa-user' },
 ];
 
+const promptConfigs = {
+	'therapistSelection': { label: 'セラピスト選択', icon: 'fa-user-md' },
+	'serviceSelection': { label: 'サービスメニュー選択', icon: 'fa-list-alt' },
+	'dateSelection': { label: '日付選択', icon: 'fa-calendar' },
+	'timeSelection': { label: '時間選択', icon: 'fa-clock' },
+	'addressSelection': { label: '住所選択', icon: 'fa-map-marker-alt' },
+	'creditCardSelection': { label: 'クレジットカード選択', icon: 'fa-credit-card' },
+	'confirmation': { label: '予約確認', icon: 'fa-check-circle' }
+};
+
 export default function ChatPage() {
 	const [inputText, setInputText] = useState('');
 	const [currentPrompts, setCurrentPrompts] = useState(defaultPrompts);
 	const [childPrompts, setChildPrompts] = useState([]);
 	const [messages, setMessages] = useState([]);
-	const [therapists, setTherapists] = useState([]);
-	const [services, setServices] = useState([]);
-	const [dates, setDates] = useState([]);
-	const [timeSlots, setTimeSlots] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
@@ -33,156 +39,170 @@ export default function ChatPage() {
 		}
 	}, [messages]);
 
-	const renderToolbar = () => (
-		<Toolbar>
-			<div className="center">りらこい　AI チャット</div>
-		</Toolbar>
-	);
-
-	const handleSend = () => {
-		if (inputText.trim()) {
-			addMessage({ type: 'user', text: inputText });
-			setInputText('');
-			// Simulate AI response
-			setTimeout(() => {
-				addMessage({ type: 'ai', text: 'こんにちは！どのようなご用件ですか？' });
-			}, 1000);
-		}
-	};
-
 	const addMessage = (message) => {
 		setMessages(prevMessages => [...prevMessages, message]);
 	};
 
-	const handlePromptClick = async (key) => {
-		if (key === 'reservation') {
-			setBookingStep('therapistSelection');
-			setCurrentPrompts([{ key: 'therapistSelection', label: 'セラピスト選択', icon: 'fa-user-md' }]);
-			addMessage({ type: 'user', text: '予約' });
-			addMessage({ type: 'ai', text: 'セラピストを選択してください。' });
-			
-			setIsLoading(true);
-			const fetchedTherapists = await fetchTherapists();
-			setIsLoading(false);
-
-			if (fetchedTherapists.length > 0) {
-				setTherapists(fetchedTherapists);
-				setChildPrompts(fetchedTherapists.map(therapist => ({
-					key: `therapist-${therapist.id}`,
-					label: therapist.name,
-					onClick: () => handleTherapistSelection(therapist)
-				})));
-			} else {
-				addMessage({ type: 'ai', text: 'セラピストの情報を取得できませんでした。もう一度お試しください。' });
-			}
-		}
-	};
-
-	const handleTherapistSelection = async (therapist) => {
-		localStorage.setItem('selectedTherapist', JSON.stringify(therapist));
-		setChildPrompts([]);
-		addMessage({ type: 'user', text: `${therapist.name}を選択` });
-		addMessage({ type: 'ai', text: `${therapist.name}が選択されました。サービスメニューを選択してください。` });
-		
-		setBookingStep('serviceSelection');
-		setCurrentPrompts([{ key: 'serviceSelection', label: 'サービスメニュー選択', icon: 'fa-list-alt' }]);
-		
-		setIsLoading(true);
-		const fetchedServices = await fetchServices();
+	const handleError = (message) => {
+		addMessage({ type: 'ai', text: message });
 		setIsLoading(false);
+	};
 
-		if (fetchedServices.length > 0) {
-			setServices(fetchedServices);
-			setChildPrompts(fetchedServices.map(service => ({
-				key: `service-${service.id}`,
-				label: service.name,
-				onClick: () => handleServiceSelection(service)
-			})));
-		} else {
-			addMessage({ type: 'ai', text: 'サービスメニューの情報を取得できませんでした。もう一度お試しください。' });
+	const updatePromptStep = (step) => {
+		setBookingStep(step);
+		const config = promptConfigs[step];
+		if (config) {
+			setCurrentPrompts([{ key: step, ...config }]);
 		}
 	};
 
-	const handleServiceSelection = async (service) => {
-		localStorage.setItem('selectedService', JSON.stringify(service));
-		setChildPrompts([]);
-		addMessage({ type: 'user', text: `${service.name}を選択` });
-		addMessage({ type: 'ai', text: `${service.name}が選択されました。日付を選択してください。` });
-		
-		setBookingStep('dateSelection');
-		setCurrentPrompts([{ key: 'dateSelection', label: '日付選択', icon: 'fa-calendar' }]);
-		
-		setIsLoading(true);
-		const fetchedDates = await fetchDates();
-		setIsLoading(false);
-
-		if (fetchedDates.length > 0) {
-			setDates(fetchedDates);
-			setChildPrompts(fetchedDates.map(date => ({
-				key: `date-${date.id}`,
-				label: date.date,
-				onClick: () => handleDateSelection(date)
-			})));
-		} else {
-			addMessage({ type: 'ai', text: '日付の情報を取得できませんでした。もう一度お試しください。' });
-		}
-	};
-
-	const handleDateSelection = async (date) => {
-		localStorage.setItem('selectedDate', JSON.stringify(date));
-		setChildPrompts([]);
-		addMessage({ type: 'user', text: `${date.date}を選択` });
-		addMessage({ type: 'ai', text: `${date.date}が選択されました。時間を選択してください。` });
-		
-		setBookingStep('timeSelection');
-		setCurrentPrompts([{ key: 'timeSelection', label: '時間選択', icon: 'fa-clock' }]);
-		
-		// Get stored data
-		const selectedTherapist = JSON.parse(localStorage.getItem('selectedTherapist'));
-		const selectedService = JSON.parse(localStorage.getItem('selectedService'));
-		
-		if (!selectedTherapist || !selectedService) {
-			addMessage({ type: 'ai', text: 'セラピストとサービスを先に選択してください。' });
-			return;
-		}
-		
-		setIsLoading(true);
+	const handleSelectionStep = async (messageType, selection, nextStep, contextData = {}) => {
 		try {
-			const fetchedTimeSlots = await fetchTimeSlots(
-				selectedTherapist.id,
-				date.date,
-				selectedService.duration || 30
-			);
-
-			if (fetchedTimeSlots.length > 0) {
-				setChildPrompts(fetchedTimeSlots.map(slot => ({
-					key: `time-${slot.id}`,
-					label: slot.time,
-					onClick: () => handleTimeSelection(slot)
+			setIsLoading(true);
+			setChildPrompts([]);
+	
+			// Store selection in localStorage
+			const selectionKey = messageType.split('_')[0];
+			const capitalizedKey = selectionKey.charAt(0).toUpperCase() + selectionKey.slice(1);
+			localStorage.setItem(`selected${capitalizedKey}`, JSON.stringify(selection));
+	
+			// Debug logging
+			console.log('Selection:', selection);
+			console.log('Message Type:', messageType);
+			console.log('Next Step:', nextStep);
+	
+			// Add user message
+			const selectionDisplay = selection.name || selection.date || selection.time || selection.address || selection.display;
+			addMessage({ type: 'user', text: `${selectionDisplay}を選択しました` });
+	
+			// Send message to AI with context
+			const aiResponse = await sendMessage(selectionDisplay, messageType, {
+				...contextData,
+				customer_id: localStorage.getItem('customerId')
+			});
+			
+			// Debug logging
+			console.log('AI Response:', aiResponse);
+	
+			// Handle AI response
+			if (aiResponse.response) {
+				addMessage({ type: 'ai', text: aiResponse.response });
+			}
+	
+			// Update prompts
+			updatePromptStep(nextStep);
+	
+			// Map response keys to their respective arrays
+			const responseMap = {
+				'therapistSelection': aiResponse.therapists,
+				'serviceSelection': aiResponse.services,
+				'dateSelection': aiResponse.dates,
+				'timeSelection': aiResponse.times,
+				'addressSelection': aiResponse.addresses,
+				'creditCardSelection': aiResponse.credit_cards
+			};
+	
+			const promptData = responseMap[nextStep] || [];
+			
+			if (promptData.length > 0) {
+				setChildPrompts(promptData.map(item => ({
+					key: `${nextStep}-${item.id}`,
+					label: item.name || item.date || item.time || item.address || item.display,
+					onClick: () => handleSelection(nextStep, item)
 				})));
-			} else {
-				addMessage({ type: 'ai', text: '指定の日付の予約可能な時間がありません。別の日付を選択してください。' });
-				// Reset to date selection if no time slots available
-				setCurrentPrompts([{ key: 'dateSelection', label: '日付選択', icon: 'fa-calendar' }]);
+			} else if (nextStep !== 'confirmation') {
+				handleError('選択可能なオプションが見つかりません。');
 			}
 		} catch (error) {
-			console.error('Error fetching time slots:', error);
-			addMessage({ type: 'ai', text: '時間枠の取得中にエラーが発生しました。もう一度お試しください。' });
+			console.error(`Error in ${messageType}:`, error);
+			handleError('処理中にエラーが発生しました。もう一度お試しください。');
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
-	const handleTimeSelection = (timeSlot) => {
-		localStorage.setItem('selectedTime', JSON.stringify(timeSlot));
-		setChildPrompts([]);
-		addMessage({ type: 'user', text: `${timeSlot.time}を選択` });
-		addMessage({ type: 'ai', text: `${timeSlot.time}が選択されました。次の手順に進んでください。` });
-		
-		// Move to next step (address selection)
-		setBookingStep('addressSelection');
-		setCurrentPrompts([{ key: 'addressSelection', label: '住所選択', icon: 'fa-map-marker-alt' }]);
+	const handleSelection = (step, selection) => {
+		const steps = {
+			'therapistSelection': () => handleSelectionStep('therapist_selection', selection, 'serviceSelection'),
+			'serviceSelection': () => handleSelectionStep('service_selection', selection, 'dateSelection'),
+			'dateSelection': () => {
+				const selectedTherapist = JSON.parse(localStorage.getItem('selectedTherapist'));
+				const selectedService = JSON.parse(localStorage.getItem('selectedService'));
+				if (!selectedTherapist || !selectedService) {
+					handleError('セラピストとサービスを先に選択してください。');
+					return;
+				}
+				handleSelectionStep('date_selection', selection, 'timeSelection', {
+					therapist_id: selectedTherapist.id,
+					date: selection.date,
+					service_time: selectedService.duration
+				});
+			},
+			'timeSelection': () => handleSelectionStep('time_selection', selection, 'addressSelection', {
+				customer_id: localStorage.getItem('customerId')
+			}),
+			'addressSelection': () => handleSelectionStep('address_selection', selection, 'creditCardSelection', {
+				customer_id: localStorage.getItem('customerId')
+			}),
+			'creditCardSelection': () => handleSelectionStep('credit_card_selection', selection, 'confirmation')
+		};
+	
+		if (steps[step]) {
+			steps[step]();
+		}
 	};
+
+	const handlePromptClick = async (key) => {
+		if (key === 'reservation') {
+			setIsLoading(true);
+			try {
+				const aiResponse = await sendMessage('start_booking', 'initial');
+				addMessage({ type: 'ai', text: aiResponse.response });
+
+				if (aiResponse.therapists) {
+					updatePromptStep('therapistSelection');
+					setChildPrompts(aiResponse.therapists.map(therapist => ({
+						key: `therapist-${therapist.id}`,
+						label: therapist.name,
+						imageUrl: therapist.imageUrl,
+						onClick: () => handleSelection('therapistSelection', therapist)
+					})));
+				} else {
+					handleError('セラピストの情報を取得できませんでした。');
+				}
+			} catch (error) {
+				handleError('エラーが発生しました。もう一度お試しください。');
+			} finally {
+				setIsLoading(false);
+			}
+		}
+	};
+
+	const handleSend = async () => {
+		if (inputText.trim()) {
+			addMessage({ type: 'user', text: inputText });
+			setInputText('');
+			const aiResponse = await sendMessage(inputText, 'chat');
+			addMessage({ type: 'ai', text: aiResponse.response || 'すみません、応答を生成できませんでした。' });
+		}
+	};
+
+	const getIconForPromptType = (promptKey) => {
+		if (promptKey.includes('therapist')) return 'fa-user-md';
+		if (promptKey.includes('service')) return 'fa-list-alt';
+		if (promptKey.includes('date')) return 'fa-calendar';
+		if (promptKey.includes('time')) return 'fa-clock';
+		if (promptKey.includes('address')) return 'fa-map-marker-alt';
+		if (promptKey.includes('creditCard')) return 'fa-credit-card';
+		return 'fa-chevron-right'; // Default icon
+	};
+
+	// Render functions remain the same
+	const renderToolbar = () => (
+		<Toolbar>
+			<div className="center">りらこい　AI チャット</div>
+		</Toolbar>
+	);
 
 	const renderBottomToolbar = () => (
 		<BottomToolbar>
@@ -205,51 +225,83 @@ export default function ChatPage() {
 	);
 
 	return (
-		<Page renderToolbar={renderToolbar} renderBottomToolbar={renderBottomToolbar} className="custom-page">
-			<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-				{/* Main Prompts */}
+		<Page renderToolbar={renderToolbar} renderBottomToolbar={renderBottomToolbar} className="custom-page" id="main_chat">
+			<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} >
+				{/* Prompts Section with max-height and scroll */}
 				<div style={{ 
-					display: 'grid',
-					gridTemplateColumns: 'repeat(2, 1fr)',
-					gap: '12px',
 					padding: '12px',
-					borderBottom: '1px solid #e0e0e0'
+					borderBottom: '1px solid #e0e0e0',
+					backgroundColor: '#F5F5F5',
+					maxHeight: '22vh', // Maximum 40% of viewport height
+					overflowY: 'auto',
+					// Add iOS momentum scroll
+					WebkitOverflowScrolling: 'touch'
 				}}>
-					{currentPrompts.map((prompt) => (
-						<PromptButton
-							key={prompt.key}
-							icon={prompt.icon}
-							label={prompt.label}
-							onClick={() => handlePromptClick(prompt.key)}
-						/>
-					))}
+					{/* Scroll indicator if there are many prompts */}
+					{(currentPrompts.length > 4 || childPrompts.length > 4) && (
+						<div className="scroll-indicator txt-white mb-10">
+							下にスクロールして続きを表示
+						</div>
+					)}
+
+					{/* Main Prompts */}
+					{currentPrompts.length > 0 && (
+						<div style={{ 
+							display: 'grid',
+							gridTemplateColumns: 'repeat(2, 1fr)',
+							gap: '12px',
+							marginBottom: childPrompts.length > 0 ? '12px' : '0'
+						}}>
+							{currentPrompts.map((prompt) => (
+								<PromptButton
+									key={prompt.key}
+									icon={prompt.icon}
+									label={prompt.label}
+									onClick={() => handlePromptClick(prompt.key)}
+								/>
+							))}
+						</div>
+					)}
+
+					{/* Child Prompts */}
+					{childPrompts.length > 0 && (
+						<div style={{ 
+							display: 'grid',
+							gridTemplateColumns: 'repeat(2, 1fr)',
+							gap: '12px'
+						}}>
+							{isLoading ? (
+								<div style={{ 
+									gridColumn: 'span 2',
+									textAlign: 'center',
+									padding: '12px'
+								}}>
+									<p>Loading...</p>
+								</div>
+							) : (
+								childPrompts.map((prompt) => (
+									<PromptButton
+										key={prompt.key}
+										label={prompt.label}
+										onClick={prompt.onClick}
+										icon={getIconForPromptType(prompt.key)}
+										imageUrl={prompt.imageUrl} // Add imageUrl prop
+									/>
+								))
+							)}
+						</div>
+					)}
 				</div>
 
-				{/* Child Prompts */}
-				{childPrompts.length > 0 && (
-					<div style={{ padding: '12px', borderBottom: '1px solid #e0e0e0' }}>
-						{isLoading ? (
-							<p>Loading...</p>
-						) : (
-							childPrompts.map((prompt) => (
-								<Button
-									key={prompt.key}
-									label={prompt.label}
-									onClick={prompt.onClick}
-									style={{ marginRight: '8px', marginBottom: '8px' }}
-								/>
-							))
-						)}
-					</div>
-				)}
-
-				{/* Chat Messages */}
+				{/* Chat Messages - Remaining space */}
 				<div 
 					ref={chatRef}
 					style={{ 
 						flex: 1,
 						overflowY: 'auto',
-						padding: '16px'
+						padding: '16px',
+						backgroundColor: '#fff',
+						minHeight: '30vh' // Ensure minimum chat visibility
 					}}
 				>
 					{messages.map((message, index) => (
@@ -263,7 +315,8 @@ export default function ChatPage() {
 								padding: '8px 12px',
 								borderRadius: '18px',
 								display: 'inline-block',
-								maxWidth: '70%'
+								maxWidth: '70%',
+								wordBreak: 'break-word'
 							}}>
 								{message.text}
 							</span>
