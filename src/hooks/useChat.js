@@ -1,74 +1,75 @@
+// src/hooks/useChat.js
 import { useState, useEffect, useCallback } from 'react';
 import aiChatService from '../services/aiChatService';
 
-export const useChat = () => {
+// Changed to default export
+export default function useChat() {
 	const [messages, setMessages] = useState([]);
 	const [prompts, setPrompts] = useState([]);
-	const [currentState, setCurrentState] = useState('initial');
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState(null);
 
+	// Fetch initial prompts
 	useEffect(() => {
-		fetchInitialPrompts();
+		const fetchPrompts = async () => {
+			try {
+				setIsLoading(true);
+				const initialPrompts = await aiChatService.getInitialPrompts();
+				setPrompts(initialPrompts);
+			} catch (err) {
+				setError('Failed to load initial prompts');
+				console.error(err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchPrompts();
 	}, []);
 
-	const fetchInitialPrompts = async () => {
+	// Send message handler
+	const sendMessage = useCallback(async (message) => {
 		try {
 			setIsLoading(true);
-			const initialPrompts = await aiChatService.getInitialPrompts();
-			setPrompts(initialPrompts);
-		} catch (error) {
-			setError('Failed to load initial prompts');
-		} finally {
-			setIsLoading(false);
-		}
-	};
+			setError(null);
 
-	const sendMessage = useCallback(async (text) => {
-		try {
-			setIsLoading(true);
-			
-			// Add user message immediately
-			const userMessage = {
-				text,
-				sender: 'user',
-				timestamp: new Date()
-			};
-			setMessages(prev => [...prev, userMessage]);
+			// Add user message to chat
+			setMessages(prev => [...prev, {
+				text: message,
+				sender: 'user'
+			}]);
 
-			// Send to API and get response
-			const response = await aiChatService.sendMessage(text, currentState);
-			
-			// Add AI response
-			const aiMessage = {
+			// Get AI response
+			const response = await aiChatService.sendMessage(message);
+
+			// Add AI response to chat
+			setMessages(prev => [...prev, {
 				text: response.message,
-				sender: 'ai',
-				timestamp: new Date()
-			};
-			setMessages(prev => [...prev, aiMessage]);
-			
-			// Update state and prompts
-			setCurrentState(response.currentState);
+				sender: 'ai'
+			}]);
+
+			// Update prompts if provided in response
 			if (response.prompts) {
 				setPrompts(response.prompts);
 			}
-		} catch (error) {
+		} catch (err) {
 			setError('Failed to send message');
-			console.error('Error sending message:', error);
+			console.error(err);
 		} finally {
 			setIsLoading(false);
 		}
-	}, [currentState]);
+	}, []);
 
-	const clearError = () => setError(null);
+	const clearError = useCallback(() => {
+		setError(null);
+	}, []);
 
 	return {
 		messages,
 		prompts,
-		currentState,
 		isLoading,
 		error,
 		sendMessage,
 		clearError
 	};
-};
+}

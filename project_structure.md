@@ -15,12 +15,15 @@ src/
 │   ├── RegisterPage.jsx
 │   ├── LoginPage.jsx
 │   └── ChatPage.jsx
+    └── AiChatPage.jsx
+    └── send-icon.png
 ├── hooks/
 │   ├── useAuth.js
 │   └── useChat.js
 ├── services/
 │   ├── api.js
 │   └── chatService.js
+    └──aiChatService.js
 ├── context/
 │   └── AuthContext.js
 ├── utils/
@@ -28,5 +31,6 @@ src/
 ├── styles/
 │   ├── global.css
 │   └── theme.js
+│   └── aiChat.css
 ├── App.jsx
 └── main.jsx

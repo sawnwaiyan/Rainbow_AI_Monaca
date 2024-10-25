@@ -1,3 +1,4 @@
+// src/pages/AiChatPage.jsx
 import React, { useState } from 'react';
 import {
 	Page,
@@ -8,7 +9,7 @@ import {
 	Icon,
 	ProgressCircular
 } from 'react-onsenui';
-import { useChat } from '../hooks/useChat';
+import useChat from '../hooks/useChat';  // Changed to default import
 import '../styles/aiChat.css';
 import sendIcon from '../pages/send-icon.png';
 
@@ -63,7 +64,7 @@ const AIChatPage = () => {
 		error,
 		sendMessage,
 		clearError
-	} = useChat();
+	} = useChat();  // Using the imported hook
 
 	const handleSend = () => {
 		if (input.trim()) {

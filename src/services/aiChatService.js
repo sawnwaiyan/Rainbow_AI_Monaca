@@ -1,20 +1,23 @@
-// src/services/aiChatService.js
+const API_BASE_URL = 'http://127.0.0.1:8000/api/prompts';  
 
 const API_ENDPOINTS = {
-	GET_PROMPTS: '/api/prompts/get_prompts/',
-	SEND_MESSAGE: '/api/prompts/ai_chat_message/',
-	GET_THERAPISTS: '/api/prompts/get_therapist_prompts/',
-	GET_SERVICES: '/api/prompts/get_service_prompts/',
-	GET_DATES: '/api/prompts/get_date_prompts/',
-	GET_TIMES: '/api/prompts/get_time_prompts/',
-	GET_ADDRESSES: '/api/prompts/get_address_prompts/',
-	GET_CARDS: '/api/prompts/get_credit_card_prompts/'
+	GET_PROMPTS: `${API_BASE_URL}/`,  // Updated endpoint
+	SEND_MESSAGE: `${API_BASE_URL}/message/`,
+	GET_THERAPISTS: `${API_BASE_URL}/therapist-prompts/`,
+	GET_SERVICES: `${API_BASE_URL}/service-prompts/`,
+	GET_DATES: `${API_BASE_URL}/date-prompts/`,
+	GET_TIMES: `${API_BASE_URL}/time-prompts/`,
+	GET_ADDRESSES: `${API_BASE_URL}/address-prompts/`,
+	GET_CARDS: `${API_BASE_URL}/credit-card-prompts/`
 };
 
 class AIChatService {
 	async getInitialPrompts() {
 		try {
 			const response = await fetch(API_ENDPOINTS.GET_PROMPTS);
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
 			const data = await response.json();
 			return data.prompts;
 		} catch (error) {
@@ -36,6 +39,10 @@ class AIChatService {
 					context
 				}),
 			});
+			
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
 
 			const data = await response.json();
 			return data;
@@ -48,6 +55,9 @@ class AIChatService {
 	async getTherapists() {
 		try {
 			const response = await fetch(API_ENDPOINTS.GET_THERAPISTS);
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
 			const data = await response.json();
 			return data.therapist_prompts;
 		} catch (error) {
@@ -59,6 +69,9 @@ class AIChatService {
 	async getServices() {
 		try {
 			const response = await fetch(API_ENDPOINTS.GET_SERVICES);
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
 			const data = await response.json();
 			return data.service_prompts;
 		} catch (error) {
@@ -66,8 +79,6 @@ class AIChatService {
 			throw error;
 		}
 	}
-
-	// Add other API methods as needed
 }
 
 export default new AIChatService();
