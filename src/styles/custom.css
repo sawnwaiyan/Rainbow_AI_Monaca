@@ -236,6 +236,10 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 	user-select: none;
 	-webkit-user-select: none;
 }
+
+.modal__content {
+	color: #000 !important;
+}
 /* Responsive adjustments */
 @media (max-width: 320px) {
 	.custom-button__image-container {
