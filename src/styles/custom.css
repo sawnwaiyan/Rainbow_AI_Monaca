@@ -1,44 +1,312 @@
-.custom-button {
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #330002!important;
-    border: 1px solid #330002;
-  }
-  
-  .custom-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    background-color: #4a0003; /* Slightly lighter for hover effect */
-  }
-  
-  .custom-button__icon {
-    color: #ffffff;
-    margin-right: 8px;
-  }
-  
-  .custom-button__label {
-    color: #ffffff;
-    font-weight: 500;
-  }
-  
-  .custom-button--primary {
-    background-color: #007AFF;
-    border-color: #007AFF;
-  }
-  
-  .custom-button--primary:hover {
-    background-color: #0056b3;
-  }
-  
-  .custom-page {
-    background-color: #C39143!important;
-  }
+.txt-white {
+  color: #fff;  
+}
 
-  .page__content {
-    background-color: #C39143!important;
-  }
+.mb-10 {
+  margin-bottom: 10px;
+}
+/* Target all page backgrounds */
+.page__background {
+	background-color: #C39143 !important;
+}
+
+/* Target the content area */
+.page__content {
+	background-color: #C39143 !important;
+}
+
+/* Target the wrapper page */
+.page--wrapper .page__background {
+	background-color: #C39143 !important;
+}
+
+/* Target the main chat page */
+#main_chat.page-with-bottom-toolbar {
+	background-color: #C39143 !important;
+}
+
+/* Target the specific content areas */
+.page, .custom-page .page__background,
+.page-with-bottom-toolbar .page__background {
+	background-color: #C39143 !important;
+}
+
+/* Override any Onsen UI default backgrounds */
+ons-page {
+	background-color: #C39143 !important;
+}
+
+/* Target the toolbar */
+.toolbar {
+	background-color: #C39143 !important;
+}
+
+/* Ensure the prompt section keeps its background */
+.prompt-section,
+div[style*="background-color: rgb(245, 245, 245)"] {
+	background-color: #C39143 !important;
+  border: 2px solid #fff!important;
+}
+
+/* Ensure chat area keeps its background */
+div[style*="background-color: rgb(255, 255, 255)"] {
+	background-color: #C39143 !important;
+  border: 2px solid #fff!important;
+}
+
+#main_chat {
+  background-color: #C39143!important;
+}
+
+.prompt-section::-webkit-scrollbar {
+	width: 4px;
+}
+
+.prompt-section::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.prompt-section::-webkit-scrollbar-thumb {
+	background-color: rgba(0, 0, 0, 0.2);
+	border-radius: 4px;
+}
+
+/* custom.css */
+.custom-button {
+	min-height: 48px;
+	padding: 12px 16px; 
+	touch-action: manipulation;
+	width: 100%;
+	/* min-height: 48px;
+	padding: 8px 12px;
+	touch-action: manipulation; */
+}
+
+.custom-button:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	background-color: #4a0003!important;
+	/* transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	background-color: #4a0003!important; */
+}
+
+.custom-button__content {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	gap: 8px;
+	/* display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	flex-wrap: wrap;
+	gap: 4px; */
+}
+
+.custom-button__icon {
+	color: #ffffff;
+	flex-shrink: 0; /* Prevent icon from shrinking */
+	font-size: 16px;
+}
+
+.custom-button__label {
+	color: #ffffff;
+	font-weight: 500;
+	font-size: 14px;
+	text-align: center;
+	word-break: break-word; /* Allow text to break */
+	overflow-wrap: break-word;
+	hyphens: auto;
+	line-height: 1.3; /* Improved line height for readability */
+	max-width: 100%; /* Ensure text stays within button */
+  user-select: none;
+	-webkit-user-select: none;
+}
+
+.prompt-button-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+	padding: 12px;
+	background-color: #F5F5F5;
+}
+
+.custom-page {
+	background-color: #C39143!important;
+}
+
+.page__content {
+	background-color: #C39143!important;
+}
 
 .button--custom-button {
-    background-color: #330002!important;
+	background-color: #330002!important;
+	padding: 10px !important;
+}
+
+/* Reset Onsen UI button styles that might interfere */
+.button--custom-button .button__content {
+	line-height: normal;
+	height: auto;
+}
+
+
+/* Update in custom.css */
+.custom-button__image-container {
+	width: 32px;  /* Slightly larger for single column */
+	height: 32px;
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;  /* Align to start for better single column layout */
+	flex-shrink: 0;
+	margin-right: 8px;
+	/* position: relative;
+	width: 44px;
+	height: 44px;
+	margin-right: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0; */
+}
+
+.custom-button__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 50%;
+	border: 2px solid #ffffff; /* Added white border */
+}
+
+.custom-button__icon {
+	color: #ffffff;
+	font-size: 20px; /* Increased icon size */
+	flex-shrink: 0;
+}
+
+.custom-button__icon--fallback {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.custom-button__content {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	text-align: left;
+}
+
+.custom-button__label {
+	color: #ffffff;
+	font-weight: 500;
+	font-size: 16px;
+	text-align: left;
+	flex: 1;
+	word-break: break-word;
+	line-height: 1.3;
+	/* font-size: 16px;
+	font-weight: 500;
+	flex: 1;
+	text-align: left;
+	margin-left: 4px; */
+}
+
+/* Image container for prompts */
+.custom-button__image-container {
+	width: 24px;
+	height: 24px;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 4px;
+	flex-shrink: 0;
+}
+
+.custom-button__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 50%;
+	border: 1px solid #ffffff;
+}
+
+/* Ensure these don't override your existing styles */
+.custom-button__content {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.custom-button__icon {
+	color: #ffffff;
+	flex-shrink: 0;
+	font-size: 16px;
+}
+
+.custom-button__label {
+	color: #ffffff;
+	font-weight: 500;
+	font-size: 14px;
+	text-align: center;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	hyphens: auto;
+	line-height: 1.3;
+	max-width: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.modal__content {
+	color: #000 !important;
+}
+/* Responsive adjustments */
+@media (max-width: 320px) {
+	.custom-button {
+		padding: 10px 14px;
+	}
+	
+	/* .custom-button__image-container {
+		width: 28px;
+		height: 28px;
+	} */
+	
+	.custom-button__label {
+		font-size: 14px;
+	}
+	.custom-button__image-container {
+		width: 36px;
+		height: 36px;
+	}
+	
+	.custom-button__label {
+		font-size: 14px;
+	}
+}
+
+
+/* Responsive font sizes */
+@media (max-width: 320px) {
+	.custom-button__label {
+		font-size: 13px;
+	}
+	.custom-button__icon {
+		font-size: 14px;
+	}
+}
+
+/* Ensure proper spacing on smaller screens */
+@media (max-width: 360px) {
+	.prompt-button-grid {
+		gap: 8px;
+		padding: 8px;
+	}
 }
