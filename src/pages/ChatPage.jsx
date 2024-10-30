@@ -83,7 +83,9 @@ export default function ChatPage() {
 			}));
 	
 			// Add user message
-			const selectionDisplay = selection.name || selection.date || selection.time || selection.address || selection.display;
+			const selectionDisplay = selection.name ? 
+				`${selection.name} (${selection.background}年)` : 
+				selection.date || selection.time || selection.address || selection.display;
 			addMessage({ type: 'user', text: `${selectionDisplay}を選択しました` });
 	
 			// Send message to AI with context
@@ -160,6 +162,17 @@ export default function ChatPage() {
 		}
 	};
 
+	const getGenderInJapanese = (gender) => {
+		switch(gender) {
+			case 'F':
+				return '女性';
+			case 'M':
+				return '男性';
+			default:
+				return '';
+		}
+	};
+	
 	const handlePromptClick = async (key) => {
 		if (key === 'reservation') {
 			setIsLoading(true);
@@ -171,7 +184,7 @@ export default function ChatPage() {
 					updatePromptStep('therapistSelection');
 					setChildPrompts(aiResponse.therapists.map(therapist => ({
 						key: `therapist-${therapist.id}`,
-						label: therapist.name,
+						label: `${therapist.name} (${therapist.background}年), (${getGenderInJapanese(therapist.gender)}) `,
 						imageUrl: therapist.imageUrl,
 						onClick: () => handleSelection('therapistSelection', therapist)
 					})));
@@ -242,7 +255,7 @@ export default function ChatPage() {
 					padding: '12px',
 					borderBottom: '1px solid #e0e0e0',
 					backgroundColor: '#F5F5F5',
-					maxHeight: '22vh',
+					maxHeight: '28vh',
 					overflowY: 'auto',
 					WebkitOverflowScrolling: 'touch'
 				}}>
@@ -256,7 +269,7 @@ export default function ChatPage() {
 					{currentPrompts.length > 0 && (
 						<div style={{ 
 							display: 'grid',
-							gridTemplateColumns: 'repeat(2, 1fr)',
+							gridTemplateColumns: '1fr',  // Changed from repeat(2, 1fr)
 							gap: '12px',
 							marginBottom: childPrompts.length > 0 ? '12px' : '0'
 						}}>
@@ -275,12 +288,12 @@ export default function ChatPage() {
 					{childPrompts.length > 0 && (
 						<div style={{ 
 							display: 'grid',
-							gridTemplateColumns: 'repeat(2, 1fr)',
+							gridTemplateColumns: '1fr',  // Changed from repeat(2, 1fr)
 							gap: '12px'
 						}}>
 							{isLoading ? (
 								<div style={{ 
-									gridColumn: 'span 2',
+									gridColumn: '1 / -1',  // Updated to span full width
 									textAlign: 'center',
 									padding: '12px'
 								}}>

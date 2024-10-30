@@ -410,7 +410,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, bookingDetails }) => {
                                         fontSize: '24px',
                                         color: '#212529',
                                         fontWeight: '500'
-                                    }}>{bookingDetails.service?.duration || '-'}</div>
+                                    }}>{bookingDetails.service?.duration || '-'} 分</div>
                                 </div>
 
                                 <div className="booking-detail-item">
@@ -424,7 +424,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, bookingDetails }) => {
                                         fontSize: '24px',
                                         color: '#212529',
                                         fontWeight: '500'
-                                    }}>{bookingDetails.service?.price || '-'}</div>
+                                    }}>¥ {bookingDetails.service?.price || '-'}</div>
                                 </div>
 
                                 <div className="booking-detail-item">
