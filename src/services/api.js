@@ -1,6 +1,7 @@
 // src/services/api.js
 
 const API_BASE_URL = 'http://127.0.0.1:8000/chat';
+const EXTERNAL_API_BASE = 'https://bookingtest.vision-c.co.jp/api';
 
 /**
  * Send a message to the chat API
@@ -127,5 +128,66 @@ export const fetchCreditCards = async (customerId = '1') => {
 	} catch (error) {
 		console.error('Error in fetchCreditCards:', error);
 		return [];
+	}
+};
+
+export const fetchCreditCardsList = async (customerId = '1') => {
+	try {
+		const response = await fetch(`${EXTERNAL_API_BASE}/credit-cards/list/`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				customer_id: customerId
+			})
+		});
+
+		if (!response.ok) {
+			throw new Error(`API error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		
+		// Format card data for display
+		const cards = data?.cards?.data || [];
+		const defaultCardId = data?.default_card;
+		
+		return cards.map(card => ({
+			id: card.id,
+			display: `${card.brand} **** ${card.last4} `,
+			isDefault: card.id === defaultCardId,
+			// Keep additional data for reference
+			brand: card.brand,
+			last4: card.last4,
+			expMonth: card.exp_month,
+			expYear: card.exp_year
+		}));
+	} catch (error) {
+		console.error('Error fetching credit cards:', error);
+		throw new Error('クレジットカード情報の取得に失敗しました。');
+	}
+};
+
+export const fetchTermsAndConditions = async () => {
+	try {
+		const response = await fetch(`${EXTERNAL_API_BASE}/terms-and-conditions/`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			}
+		});
+
+		if (!response.ok) {
+			throw new Error(`API error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		// Find cancellation policy by id: 3 or name: 'cancel_policy'
+		const cancelPolicy = data.find(item => item.name === 'cancel_policy');
+		return cancelPolicy?.content || '';
+	} catch (error) {
+		console.error('Error fetching terms:', error);
+		throw new Error('キャンセルポリシーの取得に失敗しました。');
 	}
 };
