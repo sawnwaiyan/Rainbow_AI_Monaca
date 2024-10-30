@@ -73,24 +73,35 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 
 /* custom.css */
 .custom-button {
-	min-height: 48px; /* Minimum touch target size */
+	min-height: 48px;
+	padding: 12px 16px; 
+	touch-action: manipulation;
+	width: 100%;
+	/* min-height: 48px;
 	padding: 8px 12px;
-	touch-action: manipulation; /* Optimize for touch */
+	touch-action: manipulation; */
 }
 
 .custom-button:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 	background-color: #4a0003!important;
+	/* transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	background-color: #4a0003!important; */
 }
 
 .custom-button__content {
 	display: flex;
 	align-items: center;
+	width: 100%;
+	gap: 8px;
+	/* display: flex;
+	align-items: center;
 	justify-content: center;
 	width: 100%;
-	flex-wrap: wrap; /* Allow content to wrap */
-	gap: 4px; /* Space between icon and text */
+	flex-wrap: wrap;
+	gap: 4px; */
 }
 
 .custom-button__icon {
@@ -131,6 +142,7 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 
 .button--custom-button {
 	background-color: #330002!important;
+	padding: 10px !important;
 }
 
 /* Reset Onsen UI button styles that might interfere */
@@ -142,14 +154,22 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 
 /* Update in custom.css */
 .custom-button__image-container {
+	width: 32px;  /* Slightly larger for single column */
+	height: 32px;
 	position: relative;
-	width: 44px; /* Increased size to match the design */
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;  /* Align to start for better single column layout */
+	flex-shrink: 0;
+	margin-right: 8px;
+	/* position: relative;
+	width: 44px;
 	height: 44px;
 	margin-right: 12px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-shrink: 0;
+	flex-shrink: 0; */
 }
 
 .custom-button__image {
@@ -163,6 +183,7 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 .custom-button__icon {
 	color: #ffffff;
 	font-size: 20px; /* Increased icon size */
+	flex-shrink: 0;
 }
 
 .custom-button__icon--fallback {
@@ -180,11 +201,18 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 }
 
 .custom-button__label {
-	font-size: 16px; /* Increased font size */
+	color: #ffffff;
+	font-weight: 500;
+	font-size: 16px;
+	text-align: left;
+	flex: 1;
+	word-break: break-word;
+	line-height: 1.3;
+	/* font-size: 16px;
 	font-weight: 500;
 	flex: 1;
 	text-align: left;
-	margin-left: 4px;
+	margin-left: 4px; */
 }
 
 /* Image container for prompts */
@@ -236,8 +264,24 @@ div[style*="background-color: rgb(255, 255, 255)"] {
 	user-select: none;
 	-webkit-user-select: none;
 }
+
+.modal__content {
+	color: #000 !important;
+}
 /* Responsive adjustments */
 @media (max-width: 320px) {
+	.custom-button {
+		padding: 10px 14px;
+	}
+	
+	/* .custom-button__image-container {
+		width: 28px;
+		height: 28px;
+	} */
+	
+	.custom-button__label {
+		font-size: 14px;
+	}
 	.custom-button__image-container {
 		width: 36px;
 		height: 36px;

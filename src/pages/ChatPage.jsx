@@ -3,6 +3,7 @@ import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
+import BookingConfirmationModal from '../components/chat/BookingConfirmationModal';
 import { sendMessage } from '../services/api';
 import '../styles/custom.css';
 
@@ -32,6 +33,15 @@ export default function ChatPage() {
 	const [bookingStep, setBookingStep] = useState('');
 	const inputRef = useRef(null);
 	const chatRef = useRef(null);
+	const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+	const [bookingDetails, setBookingDetails] = useState({
+		therapist: null,
+		service: null,
+		date: null,
+		time: null,
+		address: null,
+		creditCard: null
+	});
 
 	useEffect(() => {
 		if (chatRef.current) {
@@ -61,18 +71,21 @@ export default function ChatPage() {
 			setIsLoading(true);
 			setChildPrompts([]);
 	
-			// Store selection in localStorage
+			// Store selection in localStorage and update booking details
 			const selectionKey = messageType.split('_')[0];
 			const capitalizedKey = selectionKey.charAt(0).toUpperCase() + selectionKey.slice(1);
 			localStorage.setItem(`selected${capitalizedKey}`, JSON.stringify(selection));
-	
-			// Debug logging
-			console.log('Selection:', selection);
-			console.log('Message Type:', messageType);
-			console.log('Next Step:', nextStep);
+			
+			// Update booking details
+			setBookingDetails(prev => ({
+				...prev,
+				[selectionKey]: selection
+			}));
 	
 			// Add user message
-			const selectionDisplay = selection.name || selection.date || selection.time || selection.address || selection.display;
+			const selectionDisplay = selection.name ? 
+				`${selection.name} (${selection.background}年)` : 
+				selection.date || selection.time || selection.address || selection.display;
 			addMessage({ type: 'user', text: `${selectionDisplay}を選択しました` });
 	
 			// Send message to AI with context
@@ -81,9 +94,6 @@ export default function ChatPage() {
 				customer_id: localStorage.getItem('customerId')
 			});
 			
-			// Debug logging
-			console.log('AI Response:', aiResponse);
-	
 			// Handle AI response
 			if (aiResponse.response) {
 				addMessage({ type: 'ai', text: aiResponse.response });
@@ -94,12 +104,12 @@ export default function ChatPage() {
 	
 			// Map response keys to their respective arrays
 			const responseMap = {
-				'therapistSelection': aiResponse.therapists,
-				'serviceSelection': aiResponse.services,
-				'dateSelection': aiResponse.dates,
-				'timeSelection': aiResponse.times,
-				'addressSelection': aiResponse.addresses,
-				'creditCardSelection': aiResponse.credit_cards
+				therapistSelection: aiResponse.therapists,
+				serviceSelection: aiResponse.services,
+				dateSelection: aiResponse.dates,
+				timeSelection: aiResponse.times,
+				addressSelection: aiResponse.addresses,
+				creditCardSelection: aiResponse.credit_cards
 			};
 	
 			const promptData = responseMap[nextStep] || [];
@@ -152,6 +162,17 @@ export default function ChatPage() {
 		}
 	};
 
+	const getGenderInJapanese = (gender) => {
+		switch(gender) {
+			case 'F':
+				return '女性';
+			case 'M':
+				return '男性';
+			default:
+				return '';
+		}
+	};
+	
 	const handlePromptClick = async (key) => {
 		if (key === 'reservation') {
 			setIsLoading(true);
@@ -163,7 +184,7 @@ export default function ChatPage() {
 					updatePromptStep('therapistSelection');
 					setChildPrompts(aiResponse.therapists.map(therapist => ({
 						key: `therapist-${therapist.id}`,
-						label: therapist.name,
+						label: `${therapist.name} (${therapist.background}年), (${getGenderInJapanese(therapist.gender)}) `,
 						imageUrl: therapist.imageUrl,
 						onClick: () => handleSelection('therapistSelection', therapist)
 					})));
@@ -175,6 +196,8 @@ export default function ChatPage() {
 			} finally {
 				setIsLoading(false);
 			}
+		} else if (key === 'confirmation') {
+			setIsConfirmationModalOpen(true);
 		}
 	};
 
@@ -227,17 +250,15 @@ export default function ChatPage() {
 	return (
 		<Page renderToolbar={renderToolbar} renderBottomToolbar={renderBottomToolbar} className="custom-page" id="main_chat">
 			<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} >
-				{/* Prompts Section with max-height and scroll */}
+				{/* Prompts Section */}
 				<div style={{ 
 					padding: '12px',
 					borderBottom: '1px solid #e0e0e0',
 					backgroundColor: '#F5F5F5',
-					maxHeight: '22vh', // Maximum 40% of viewport height
+					maxHeight: '28vh',
 					overflowY: 'auto',
-					// Add iOS momentum scroll
 					WebkitOverflowScrolling: 'touch'
 				}}>
-					{/* Scroll indicator if there are many prompts */}
 					{(currentPrompts.length > 4 || childPrompts.length > 4) && (
 						<div className="scroll-indicator txt-white mb-10">
 							下にスクロールして続きを表示
@@ -248,7 +269,7 @@ export default function ChatPage() {
 					{currentPrompts.length > 0 && (
 						<div style={{ 
 							display: 'grid',
-							gridTemplateColumns: 'repeat(2, 1fr)',
+							gridTemplateColumns: '1fr',  // Changed from repeat(2, 1fr)
 							gap: '12px',
 							marginBottom: childPrompts.length > 0 ? '12px' : '0'
 						}}>
@@ -267,12 +288,12 @@ export default function ChatPage() {
 					{childPrompts.length > 0 && (
 						<div style={{ 
 							display: 'grid',
-							gridTemplateColumns: 'repeat(2, 1fr)',
+							gridTemplateColumns: '1fr',  // Changed from repeat(2, 1fr)
 							gap: '12px'
 						}}>
 							{isLoading ? (
 								<div style={{ 
-									gridColumn: 'span 2',
+									gridColumn: '1 / -1',  // Updated to span full width
 									textAlign: 'center',
 									padding: '12px'
 								}}>
@@ -285,7 +306,7 @@ export default function ChatPage() {
 										label={prompt.label}
 										onClick={prompt.onClick}
 										icon={getIconForPromptType(prompt.key)}
-										imageUrl={prompt.imageUrl} // Add imageUrl prop
+										imageUrl={prompt.imageUrl}
 									/>
 								))
 							)}
@@ -293,7 +314,7 @@ export default function ChatPage() {
 					)}
 				</div>
 
-				{/* Chat Messages - Remaining space */}
+				{/* Chat Messages */}
 				<div 
 					ref={chatRef}
 					style={{ 
@@ -301,7 +322,7 @@ export default function ChatPage() {
 						overflowY: 'auto',
 						padding: '16px',
 						backgroundColor: '#fff',
-						minHeight: '30vh' // Ensure minimum chat visibility
+						minHeight: '30vh'
 					}}
 				>
 					{messages.map((message, index) => (
@@ -324,6 +345,12 @@ export default function ChatPage() {
 					))}
 				</div>
 			</div>
+
+			<BookingConfirmationModal
+				isOpen={isConfirmationModalOpen}
+				onClose={() => setIsConfirmationModalOpen(false)}
+				bookingDetails={bookingDetails}
+			/>
 		</Page>
 	);
 }
