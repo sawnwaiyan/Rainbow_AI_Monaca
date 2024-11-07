@@ -1,6 +1,7 @@
 // src/services/api.js
 
-const API_BASE_URL = 'http://127.0.0.1:8000/chat';
+// const API_BASE_URL = 'http://127.0.0.1:8000/chat';
+const API_BASE_URL = "https://bookingtest.vision-c.co.jp/api/prompt-chat";
 const EXTERNAL_API_BASE = 'https://bookingtest.vision-c.co.jp/api';
 
 /**
