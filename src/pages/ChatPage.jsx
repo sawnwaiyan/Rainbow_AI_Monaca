@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Page, Toolbar, BottomToolbar } from 'react-onsenui';
+import { Page, Toolbar, BottomToolbar, ProgressCircular   } from 'react-onsenui';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import PromptButton from '../components/common/PromptButton';
@@ -115,6 +115,7 @@ export default function ChatPage() {
 			const promptData = responseMap[nextStep] || [];
 			
 			if (promptData.length > 0) {
+				setIsLoading(true);
 				setChildPrompts(promptData.map(item => ({
 					key: `${nextStep}-${item.id}`,
 					label: item.name || item.date || item.time || item.address || item.display,
@@ -223,7 +224,20 @@ export default function ChatPage() {
 	// Render functions remain the same
 	const renderToolbar = () => (
 		<Toolbar>
-			<div className="center">りらこい　AI チャット</div>
+			<div className="center" style={{ fontWeight: 'bold', color: 'white' }}>りらこい-Chat Bot</div>
+			<div className="right">
+				<Button
+					icon="fa-refresh"
+					onClick={handleReset}
+					modifier="quiet"
+					style={{
+						color: '#fff',
+						padding: '0 12px',
+						fontSize: '14px',
+						fontWeight: 'bold',
+					}}
+				/>
+			</div>
 		</Toolbar>
 	);
 
@@ -247,15 +261,95 @@ export default function ChatPage() {
 		</BottomToolbar>
 	);
 
+	const handleReset = () => {
+		// Clear all states
+		setInputText('');
+		setCurrentPrompts(defaultPrompts);
+		setChildPrompts([]);
+		setMessages([]);
+		setIsLoading(false);
+		setBookingStep('');
+		setIsConfirmationModalOpen(false);
+		setBookingDetails({
+			therapist: null,
+			service: null,
+			date: null,
+			time: null,
+			address: null,
+			creditCard: null
+		});
+
+		// Clear localStorage
+		localStorage.removeItem('selectedTherapist');
+		localStorage.removeItem('selectedService');
+		localStorage.removeItem('selectedDate');
+		localStorage.removeItem('selectedTime');
+		localStorage.removeItem('selectedAddress');
+		localStorage.removeItem('selectedCreditCard');
+	};
+
+	const renderLoading = () => (
+		<div style={{ 
+			gridColumn: '1 / -1',
+			textAlign: 'center',
+			padding: '20px',
+			display: 'flex',
+			flexDirection: 'column',
+			alignItems: 'center',
+			gap: '10px'
+		}}>
+			<ProgressCircular indeterminate />
+			<p style={{ 
+				color: '#666',
+				fontSize: '14px',
+				textAlign: 'center',
+			}}>
+				xxxxxxxxxxxxxxxxxxxxxxxx
+			</p>
+		</div>
+	);
+
 	return (
 		<Page renderToolbar={renderToolbar} renderBottomToolbar={renderBottomToolbar} className="custom-page" id="main_chat">
 			<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }} >
+				{/* Chat Messages */}
+				<div 
+					ref={chatRef}
+					style={{ 
+						flex: 1,
+						overflowY: 'auto',
+						padding: '16px',
+						backgroundColor: '#fff',
+						minHeight: '30vh'
+					}}
+				>
+					{messages.map((message, index) => (
+						<div key={index} style={{
+							marginBottom: '10px',
+							textAlign: message.type === 'user' ? 'right' : 'left'
+						}}>
+							<span style={{
+								background: message.type === 'user' ? '#007AFF' : '#E5E5EA',
+								color: message.type === 'user' ? 'white' : 'black',
+								padding: '8px 12px',
+								borderRadius: '18px',
+								display: 'inline-block',
+								maxWidth: '70%',
+								wordBreak: 'break-word'
+							}}>
+								{message.text}
+							</span>
+						</div>
+					))}
+				</div>
+
 				{/* Prompts Section */}
 				<div style={{ 
 					padding: '12px',
 					borderBottom: '1px solid #e0e0e0',
 					backgroundColor: '#F5F5F5',
 					maxHeight: '28vh',
+					height: '28vh',
 					overflowY: 'auto',
 					WebkitOverflowScrolling: 'touch'
 				}}>
@@ -292,13 +386,7 @@ export default function ChatPage() {
 							gap: '12px'
 						}}>
 							{isLoading ? (
-								<div style={{ 
-									gridColumn: '1 / -1',  // Updated to span full width
-									textAlign: 'center',
-									padding: '12px'
-								}}>
-									<p>Loading...</p>
-								</div>
+								renderLoading()
 							) : (
 								childPrompts.map((prompt) => (
 									<PromptButton
@@ -312,37 +400,6 @@ export default function ChatPage() {
 							)}
 						</div>
 					)}
-				</div>
-
-				{/* Chat Messages */}
-				<div 
-					ref={chatRef}
-					style={{ 
-						flex: 1,
-						overflowY: 'auto',
-						padding: '16px',
-						backgroundColor: '#fff',
-						minHeight: '30vh'
-					}}
-				>
-					{messages.map((message, index) => (
-						<div key={index} style={{
-							marginBottom: '10px',
-							textAlign: message.type === 'user' ? 'right' : 'left'
-						}}>
-							<span style={{
-								background: message.type === 'user' ? '#007AFF' : '#E5E5EA',
-								color: message.type === 'user' ? 'white' : 'black',
-								padding: '8px 12px',
-								borderRadius: '18px',
-								display: 'inline-block',
-								maxWidth: '70%',
-								wordBreak: 'break-word'
-							}}>
-								{message.text}
-							</span>
-						</div>
-					))}
 				</div>
 			</div>
 
